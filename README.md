@@ -16,3 +16,4 @@ Screenshot
 ![Coder2_v2.2_20200721_03.png](notes/Coder2_v2.2_20200721_03.png?raw=true)
 ![Coder2_v2.2_20200721_04.png](notes/Coder2_v2.2_20200721_04.png?raw=true)
 ![Coder2_v2.2_20200721_05.png](notes/Coder2_v2.2_20200721_05.png?raw=true)
+![Coder2_v2.2_20200721_06.png](notes/Coder2_v2.2_20200721_05.png?raw=true)
