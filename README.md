@@ -13,4 +13,4 @@ Screenshot
 
 ![Coder2_v2.2_20200721_01.png](notes/Coder2_v2.2_20200721_01.png?raw=true)
 ![Coder2_v2.2_20200721_02.png](notes/Coder2_v2.2_20200721_02.png?raw=true)
-![Coder2_v2.2_20200721_03.png](notes/Coder2_v2.2_20200721_02.png?raw=true)
+![Coder2_v2.2_20200721_03.png](notes/Coder2_v2.2_20200721_03.png?raw=true)
