@@ -30,8 +30,8 @@ exec(auto_load('Pipeline/_template','LNTextEdit','Coder2_LNTextEdit'))
 #############################################
 # User Class creation
 #############################################
-version = '2.2'
-date = '2020.07.21'
+version = '2.3'
+date = '2020.07.22'
 log = '''
 #------------------------------
 author: ying
@@ -39,6 +39,9 @@ support: https://github.com/shiningdesign
 #------------------------------
 Coder is designed for Maya coder by Maya coder, 
 a true example of combining Maya UI elements with Qt UI elements, and maintain interaction.
+v2.3: (2020.07.22):
+  * add code auto completion from maya in setting menu
+  * add Chinese language
 v2.2: (2020.07.21)
   * prepare public release coding
 v2.1: (2020.07.17)
@@ -127,11 +130,12 @@ class Coder2(UniversalToolUI):
         
         # custom menu item
         self.qui_menu('openFile_atn;Open File,F5 | saveFile_atn;Save File,F4','file_menu')
-        self.qui_menu('clearHistory_atn;Clear History,Ctrl+Shift+H | saveEdit_atn;Save Edit,Ctrl+Shift+F | search_atn;Search Text,F2 | searchNext_atn;Search Next,F3 | goLine_atn;Go Line,Ctrl+G | _ ', 'setting_menu')
+        self.qui_menu('clearHistory_atn;Clear History,Ctrl+Shift+H | saveEdit_atn;Save Edit,Ctrl+Shift+F | showConfig_atn;Show Config Folder,Ctrl+Alt+F | search_atn;Search Text,F2 | searchNext_atn;Search Next,F3 | goLine_atn;Go Line,Ctrl+G | _ ', 'setting_menu')
         for i in range(1,5):
             self.qui_menu('level_{0}_atn;Level {0},Ctrl+{0}'.format(i), 'setting_menu')
-        self.qui_menu('updateNavi_atn;Update Navigator,Ctrl+R | _ | showConfig_atn;Show Config Folder,Ctrl+Alt+F', 'setting_menu')
-        
+        self.qui_menu('updateNavi_atn;Update Navigator,Ctrl+R | _ | edit_autoCompletionToggle_atn;Toggle Code Auto Completion', 'setting_menu')
+        self.uiList['edit_autoCompletionToggle_atn'].setCheckable(1)
+        self.uiList['edit_autoCompletionToggle_atn'].setChecked(0)
         tmp_item_list = [ 
             ('selection_insert_toggleStr','Toggle unicode selection to str',''),
             ('selection_insert','Insert Selected Item Names','Alt+S'),
@@ -556,7 +560,14 @@ class Coder2(UniversalToolUI):
             if result == 'Run Time Command':
                 result = mel.eval('runTimeCommand -q -c "{0}";'.format(cur_text))
                 print(result)
-                
+    def edit_autoCompletionToggle_action(self):
+        autoCompletion_check = int(self.uiList['edit_autoCompletionToggle_atn'].isChecked())
+        for i in [1,2,3]:
+            ui_name = 'main_{0}_cmdBox'.format(i)
+            if autoCompletion_check:
+                cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList[ui_name]), e=1, showTooltipHelp=1, objectPathCompletion=1, commandCompletion=1, autoCloseBraces=1)
+            else:
+                cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList[ui_name]), e=1, showTooltipHelp=0, objectPathCompletion=0, commandCompletion=0, autoCloseBraces=0)
     #=======================================
     #  functions : core for CodeView
     #=======================================
@@ -610,7 +621,7 @@ class Coder2(UniversalToolUI):
     def CmdBox(self, ui_name, type='python'):
         if cmds.cmdScrollFieldExecuter(ui_name, q=1, ex=1):
             cmds.deleteUI(ui_name)
-        mui = cmds.cmdScrollFieldExecuter(ui_name, st=type, sth=0, sln=1, tabsForIndent=0)# width=200, height=100)
+        mui = cmds.cmdScrollFieldExecuter(ui_name, st=type, sln=1, tabsForIndent=0, showTooltipHelp=0, objectPathCompletion=0, commandCompletion=0, autoCloseBraces=0)
         if type=='python':
             cmds.cmdScrollFieldExecuter(mui, e=1, t="# Code Here")
         elif type=='mel':
