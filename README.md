@@ -2,6 +2,7 @@
 Alternative and Better Dual Code Panel ScriptEditor for Maya coder, drag install_Coder2.mel into Maya viewport to install to current shelf.
 
 双代码Maya脚本编辑器，基于Maya脚本编辑器的增强版，拖拽install_Coder2.mel 到Maya视窗里即可安装到当前Maya工具栏。
+在language目录里切换CN既是中文界面。
 
 Core Features
 ===================
