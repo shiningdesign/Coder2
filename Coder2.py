@@ -30,8 +30,8 @@ exec(auto_load('Pipeline/_template','LNTextEdit','Coder2_LNTextEdit'))
 #############################################
 # User Class creation
 #############################################
-version = '2.3'
-date = '2020.07.22'
+version = '2.6'
+date = '2021.03.03'
 log = '''
 #------------------------------
 author: ying
@@ -39,6 +39,12 @@ support: https://github.com/shiningdesign
 #------------------------------
 Coder is designed for Maya coder by Maya coder, 
 a true example of combining Maya UI elements with Qt UI elements, and maintain interaction.
+v2.6: (2021.03.03):
+  * update navi
+v2.5: (2021.02.08):
+  * run toCurrentLine
+v2.4: (2020.09.18):
+  * set self.memoData['last_export'] from clipboard, so you can save file script to a location fast instead browsing
 v2.3: (2020.07.22):
   * add code auto completion from maya in setting menu
   * add Chinese language
@@ -78,7 +84,12 @@ v0.1: (2016.10.13)
 help = '''
 File Open / Open from Clipboard path: 
   * hold ctrl/alt/shift to open in 2nd cmd box
+  
 Check menu for hotkey operations
+
+# navi panel
+  * main section use "# = variable setting ="
+  * sub section use "# - step 1 -"
 '''
 # --------------------
 #  user module list
@@ -120,7 +131,7 @@ class Coder2(UniversalToolUI):
     # overwrite functions
     #------------------------------
     def setupMenu(self):
-        self.qui_menubar('file_menu;&File | setting_menu;Setting | insert_menu;&Insert | help_menu;&Help')
+        self.qui_menubar('file_menu;&File | setting_menu;Setting | insert_menu;&Insert | run_menu;Run | help_menu;&Help')
         
         info_list = ['export', 'import','user']
         info_item_list = ['{0}Config_atn;{1} Config (&{2}),Ctrl+{2}'.format(info,info.title(),info.title()[0]) for info in info_list]+['_']
@@ -148,7 +159,12 @@ class Coder2(UniversalToolUI):
         self.qui_menu(menu_str, 'insert_menu')
         self.uiList['selection_insert_toggleStr_atn'].setCheckable(1)
         self.uiList['selection_insert_toggleStr_atn'].setChecked(0)
-        
+        # run
+        tmp_item_list = [ 
+            ('run_toCurrentLine','Run till Current Line','Alt+R'),
+        ]
+        menu_str = '|'.join(['{0}_atn;{1},{2}'.format(*x) for x in tmp_item_list] + ['_'])
+        self.qui_menu(menu_str, 'run_menu')
         # default help menu
         super(self.__class__,self).setupMenu()
     
@@ -178,7 +194,7 @@ class Coder2(UniversalToolUI):
         #=======================================
         #  quick operation buttons
         #=======================================
-        self.qui('file_openClipboardPath_btn;Open from Clipboard Path | file_showScenePath_btn;Show Scene Path | win_nodeEditor_btn;Node Editor | selection_count_btn;Count Selection | btn_space', 'quick_layout;hbox')
+        self.qui('file_openClipboardPath_btn;Open from Clipboard Path | file_showScenePath_btn;Show Scene Path | win_nodeEditor_btn;Node Editor | selection_count_btn;Count Selection | file_setLastExportPath_btn;Set Export Path from clipboard | btn_space', 'quick_layout;hbox')
         #=======================================
         #  ui - browse tabs
         #=======================================
@@ -452,7 +468,7 @@ class Coder2(UniversalToolUI):
         cur_tree = self.uiList['navi_tree']
         cur_tree.clear()
         parentNode = cur_tree.invisibleRootItem()
-        seg_pattern = re.compile('#[ ]*[=]+[a-zA-Z ]*[ ]*')
+        seg_pattern = re.compile('#[ ]*[=]+[a-zA-Z ]+[ ]*')
         sub_pattern = re.compile('#[ ]*-[a-zA-Z ]*-[ ]*')
         for i in range(len(lines)):
             if seg_pattern.match(lines[i]):
@@ -486,6 +502,16 @@ class Coder2(UniversalToolUI):
                     self.openFile_action(copy_path, alt=1)
             elif copy_path.endswith('.mel'):
                 self.openFile_action(copy_path, alt=2)
+    def file_setLastExportPath_action(self):
+        clipboard = QtWidgets.QApplication.clipboard()
+        copy_path = unicode(clipboard.text())
+        if os.path.exists(copy_path):
+            if not os.path.isdir(copy_path):
+                copy_path = os.path.dirname(copy_path)
+            # set
+            self.memoData['last_export'] = copy_path
+        else:
+            print('clipboard is not a path: {0}'.format(copy_path))
     def file_showScenePath_action(self):
         filePath = cmds.file(q=1, sn=1) # filepath
         print(filePath)
@@ -568,6 +594,14 @@ class Coder2(UniversalToolUI):
                 cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList[ui_name]), e=1, showTooltipHelp=1, objectPathCompletion=1, commandCompletion=1, autoCloseBraces=1)
             else:
                 cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList[ui_name]), e=1, showTooltipHelp=0, objectPathCompletion=0, commandCompletion=0, autoCloseBraces=0)
+    def run_toCurrentLine_action(self):
+        all_lines = cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]), q=1, t=1)
+        cur_line_num = cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]), q=1, cl=1)
+        all_line_list = all_lines.split('\n')
+        cur_line_txt = '\n'.join(all_line_list[:cur_line_num])
+        char_index = len(cur_line_txt)
+        cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]),e=1, select=[0,char_index])
+        cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]),e=1, exc=1)
     #=======================================
     #  functions : core for CodeView
     #=======================================
