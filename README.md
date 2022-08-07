@@ -43,7 +43,7 @@ Version
     * upgrade to template 2010
     * add count select list
     * write mel as well
-   * remove file list
+    * remove file list
   * v1.7: (2020.06.30)
     * added attribute selection
     * open clip path in mel supported
