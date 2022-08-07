@@ -34,7 +34,7 @@ Version
     * set self.memoData['last_export'] from clipboard, so you can save file script to a location fast instead browsing
   * v2.3: (2020.07.22):
     * add code auto completion from maya in setting menu
-  * add Chinese language
+    * add Chinese language
   * v2.2: (2020.07.21)
     * prepare public release coding
   * v2.1: (2020.07.17)
