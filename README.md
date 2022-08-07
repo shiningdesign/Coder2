@@ -1,8 +1,10 @@
 # Coder2
 Alternative and Better Dual Code Panel ScriptEditor for Maya coder, drag install_Coder2.mel into Maya viewport to install to current shelf.
+(Tested in Maya 2017, Maya 2022)
 
 双代码Maya脚本编辑器，基于Maya脚本编辑器的增强版，拖拽install_Coder2.mel 到Maya视窗里即可安装到当前Maya工具栏。
 在language目录里切换CN既是中文界面。
+(测试成功 Maya 2017, Maya 2022)
 
 Core Features
 ===================
@@ -14,7 +16,11 @@ Core Features
   * 双代码Maya脚本编辑 (Python + Python/Mel)
   * 主代码结构目录浏览
   * 加载和查找自定义常见代码库
-  
+
+Version
+===================
+update 2022.08.07: long to int for python3 support, update install mel for py3 as well
+
 Screenshot
 ===================
 
