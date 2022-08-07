@@ -30,8 +30,8 @@ exec(auto_load('Pipeline/_template','LNTextEdit','Coder2_LNTextEdit'))
 #############################################
 # User Class creation
 #############################################
-version = '2.6'
-date = '2021.03.03'
+version = '2.9'
+date = '2022.08.07'
 log = '''
 #------------------------------
 author: ying
@@ -39,6 +39,12 @@ support: https://github.com/shiningdesign
 #------------------------------
 Coder is designed for Maya coder by Maya coder, 
 a true example of combining Maya UI elements with Qt UI elements, and maintain interaction.
+v2.9: (2022.08.07)
+  * fix long to int for maya2022
+v2.8: (2022.05.07)
+  * run just current line with just the cursor position with alt+e
+v2.7: (2021.05.11):
+  * add navi run code
 v2.6: (2021.03.03):
   * update navi
 v2.5: (2021.02.08):
@@ -162,6 +168,7 @@ class Coder2(UniversalToolUI):
         # run
         tmp_item_list = [ 
             ('run_toCurrentLine','Run till Current Line','Alt+R'),
+            ('run_currentLine','Run just Current Line','Alt+E'),
         ]
         menu_str = '|'.join(['{0}_atn;{1},{2}'.format(*x) for x in tmp_item_list] + ['_'])
         self.qui_menu(menu_str, 'run_menu')
@@ -202,7 +209,10 @@ class Coder2(UniversalToolUI):
         
         self.qui('mel_whatIs_btn;whatIs | mel_space', 'mel_tool_layout;hbox')
         self.qui('mel_tool_layout | main_3_cmdBox', 'mel_layout;vbox')
-        self.qui('main_2_cmdBox | mel_layout | navi_tree;(navi,line) | maya_utt_coder', 'side_tab;h', '(Cmd,Mel,Navi,File,utt Maya)')
+        self.qui('navi_tree_runToHere_btn;Run To Here | navi_tree_runSelectedBlock_btn;Run Selected Block | navi_tree_runToEnd_btn;Run To @End | navi_tree_space | updateNavi_btn;Update Navi','navi_tree_action_layout;hbox')
+        self.qui('navi_tree;(navi,line) | navi_tree_action_layout','navi_tree_layout;vbox')
+        
+        self.qui('main_2_cmdBox | mel_layout | navi_tree_layout | maya_utt_coder', 'side_tab;h', '(Cmd,Mel,Navi,File,utt Maya)')
         self.uiList['side_tab'].setStyleSheet("QTabWidget::tab-bar{alignment:left;}QTabBar::tab { min-width: 100px; }")
         self.uiList['navi_tree'].setColumnWidth(0,300)
         # response
@@ -469,8 +479,12 @@ class Coder2(UniversalToolUI):
         cur_tree.clear()
         parentNode = cur_tree.invisibleRootItem()
         seg_pattern = re.compile('#[ ]*[=]+[a-zA-Z ]+[ ]*')
-        sub_pattern = re.compile('#[ ]*-[a-zA-Z ]*-[ ]*')
+        sub_pattern = re.compile('#[ ]*-[a-zA-Z ]+-[ ]*')
         for i in range(len(lines)):
+            if lines[i].startswith(('#@finished','#@END')):
+                cur_node = QtWidgets.QTreeWidgetItem(['END',str(i+1)])
+                cur_tree.invisibleRootItem().addChild(cur_node)
+                break
             if seg_pattern.match(lines[i]):
                 name = lines[i].replace('#','').replace('=','').replace('-','').strip()
                 cur_node = QtWidgets.QTreeWidgetItem([name,str(i+1)])
@@ -602,6 +616,19 @@ class Coder2(UniversalToolUI):
         char_index = len(cur_line_txt)
         cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]),e=1, select=[0,char_index])
         cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]),e=1, exc=1)
+    def run_currentLine_action(self):
+        all_lines = cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]), q=1, t=1)
+        cur_line_num = cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]), q=1, cl=1)
+        all_line_list = all_lines.split('\n')
+        all_till_cur_line_txt = '\n'.join(all_line_list[:cur_line_num])
+        cur_line_txt = all_line_list[cur_line_num-1] # the queried cur num is from 1
+        # print(cur_line_txt)
+        char_index = len(all_till_cur_line_txt)
+        char_index_start = char_index - len(cur_line_txt)
+        # print(char_index)
+        # print(char_index_start)
+        cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]),e=1, select=[char_index_start,char_index])
+        cmds.cmdScrollFieldExecuter(self.qt_to_mui(self.uiList['main_{0}_cmdBox'.format(1)]),e=1, exc=1)
     #=======================================
     #  functions : core for CodeView
     #=======================================
@@ -636,20 +663,20 @@ class Coder2(UniversalToolUI):
         if ptr is not None:
             if qtMode in (0,2):
                 # ==== for pyside ====
-                return shiboken.wrapInstance(long(ptr), QtWidgets.QWidget)
+                return shiboken.wrapInstance(int(ptr), QtWidgets.QWidget)
             elif qtMode in (1,3):
                 # ==== for PyQt====
-                return sip.wrapinstance(long(ptr), QtCore.QObject)
+                return sip.wrapinstance(int(ptr), QtCore.QObject)
     def qt_to_mui(self, qt_obj):
         if hostMode != "maya":
             return
         ref = None
         if qtMode in (0,2):
             # ==== for pyside ====
-            ref = long(shiboken.getCppPointer(qt_obj)[0])
+            ref = int(shiboken.getCppPointer(qt_obj)[0])
         elif qtMode in (1,3):
             # ==== for PyQt====
-            ref = long(sip.unwrapinstance(qt_obj))
+            ref = int(sip.unwrapinstance(qt_obj))
         if ref is not None:
             return mui.MQtUtil.fullName(ref)
     def CmdBox(self, ui_name, type='python'):
@@ -710,9 +737,9 @@ def main(mode=0):
     parentWin = None
     if hostMode == "maya":
         if qtMode in (0,2): # pyside
-            parentWin = shiboken.wrapInstance(long(mui.MQtUtil.mainWindow()), QtWidgets.QWidget)
+            parentWin = shiboken.wrapInstance(int(mui.MQtUtil.mainWindow()), QtWidgets.QWidget)
         elif qtMode in (1,3): # PyQt
-            parentWin = sip.wrapinstance(long(mui.MQtUtil.mainWindow()), QtCore.QObject)
+            parentWin = sip.wrapinstance(int(mui.MQtUtil.mainWindow()), QtCore.QObject)
     # create app object for certain host
     global app_Coder2
     if hostMode in ('desktop', 'blender', 'npp', 'fusion'):

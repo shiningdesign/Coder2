@@ -1166,9 +1166,9 @@ def main(mode=0):
     parentWin = None
     if hostMode == "maya":
         if qtMode in (0,2): # pyside
-            parentWin = shiboken.wrapInstance(long(mui.MQtUtil.mainWindow()), QtWidgets.QWidget)
+            parentWin = shiboken.wrapInstance(int(mui.MQtUtil.mainWindow()), QtWidgets.QWidget)
         elif qtMode in (1,3): # PyQt
-            parentWin = sip.wrapinstance(long(mui.MQtUtil.mainWindow()), QtCore.QObject)
+            parentWin = sip.wrapinstance(int(mui.MQtUtil.mainWindow()), QtCore.QObject)
     # create app object for certain host
     global app_UserClassUI
     if hostMode in ('desktop', 'blender', 'npp', 'fusion'):
